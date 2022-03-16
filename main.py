@@ -130,12 +130,6 @@ async def shoko_drinks_smoothie(call: types.CallbackQuery):
     await call.answer()
 
 
-# @dp.callback_query_handler(text="test")
-# async def shoko_drinks_smoothie(call: types.CallbackQuery):
-# keyboard = kb.shoko_test()
-# await call.message.answer("Какое смузи интересует?", reply_markup=keyboard)
-# await call.answer()
-
 
 if __name__ == '__main__':
     executor.start_polling(dp)
