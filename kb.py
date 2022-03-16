@@ -1,4 +1,4 @@
-from aiogram import types
+from aiogram import Bot, Dispatcher, executor, types
 
 
 def shoko_m():
@@ -121,6 +121,3 @@ def shoko_sp():
         types.InlineKeyboardButton(text='Куриный суп', callback_data='chicken_soup'),
         types.InlineKeyboardButton(text='Том ям', callback_data='tom_yam_soup'))
     return keyboard
-
-
-

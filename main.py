@@ -1,6 +1,6 @@
+import sqlite3
 import logging
 from aiogram import Bot, Dispatcher, executor, types
-
 import botadmin
 import kb
 
@@ -11,6 +11,14 @@ dp = Dispatcher(bot)
 logging.basicConfig(level=logging.INFO)
 
 
+conn = sqlite3.connect('db/database.db', check_same_thread=False)
+cursor = conn.cursor()
+
+
+def db_table_val(user_id: int, user_name: str):
+	cursor.execute('INSERT INTO ShokoBot (user_id, user_name) VALUES (?, ?)', (user_id, user_name))
+	conn.commit()
+
 # Стартовое меню
 @dp.message_handler(commands="start")
 async def shoko_start(message: types.Message):
@@ -18,8 +26,10 @@ async def shoko_start(message: types.Message):
     keyboard.add(types.KeyboardButton(text='Меню'),
                  types.KeyboardButton(text='Помощь'),
                  types.KeyboardButton(text='Корзина'))
+    us_id = message.from_user.id
+    us_name = message.from_user.first_name
+    db_table_val(user_id=us_id, user_name=us_name)
     await message.answer("Выберите действие:", reply_markup=keyboard)
-
     return keyboard
 
 
@@ -30,7 +40,6 @@ async def shoko_start(message: types.Message):
                  types.KeyboardButton(text='Помощь'),
                  types.KeyboardButton(text='Корзина'))
     await message.answer("Выберите действие:", reply_markup=keyboard)
-
     return keyboard
 
 
@@ -38,7 +47,6 @@ async def shoko_start(message: types.Message):
 async def shoko_menu(message: types.Message):
     keyboard = kb.shoko_m()
     keyboard1 = kb.shoko_s()
-
     await message.answer("Выберите действие:", reply_markup=keyboard)
     await message.answer("Выберите действие:", reply_markup=keyboard1)
 
@@ -57,9 +65,9 @@ async def shoko_help(message: types.Message):
 
 @dp.message_handler(text="Наши контакты")
 async def shoko_help(message: types.Message):
-    await message.answer("Наша почта: help@shoko.ru")
-    await message.answer("Наша телефон: 8-999-99-99-99")
-    await message.answer("Наш бот для обратной связи:@shoko_delevery_bot")
+    await message.answer("""Наша почта: help@shoko.ru
+Наша телефон: 8-999-99-99-99
+Наш бот для обратной связи:@shoko_delevery_bot""")
 
 
 # Обработка напитков
@@ -128,7 +136,6 @@ async def shoko_drinks_smoothie(call: types.CallbackQuery):
     keyboard = kb.shoko_dr_cold_smoothie()
     await call.message.answer("Какое смузи интересует?", reply_markup=keyboard)
     await call.answer()
-
 
 
 if __name__ == '__main__':
