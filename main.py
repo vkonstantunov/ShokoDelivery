@@ -1,8 +1,9 @@
-import sqlite3
 import logging
 from aiogram import Bot, Dispatcher, executor, types
 import botadmin
 import kb
+from db import dbshoko
+
 
 bot = Bot(token=botadmin.TOKEN)
 # Диспетчер для бота
@@ -10,14 +11,6 @@ dp = Dispatcher(bot)
 # Включаем логирование, чтобы не пропустить важные сообщения
 logging.basicConfig(level=logging.INFO)
 
-
-conn = sqlite3.connect('db/database.db', check_same_thread=False)
-cursor = conn.cursor()
-
-
-def db_table_val(user_id: int, user_name: str):
-	cursor.execute('INSERT INTO ShokoBot (user_id, user_name) VALUES (?, ?)', (user_id, user_name))
-	conn.commit()
 
 # Стартовое меню
 @dp.message_handler(commands="start")
@@ -28,8 +21,8 @@ async def shoko_start(message: types.Message):
                  types.KeyboardButton(text='Корзина'))
     us_id = message.from_user.id
     us_name = message.from_user.first_name
-    db_table_val(user_id=us_id, user_name=us_name)
-    await message.answer("Выберите действие:", reply_markup=keyboard)
+    dbshoko.db_table_val(user_id=us_id, user_name=us_name)
+    await message.answer('Выберите действие:', reply_markup=keyboard)
     return keyboard
 
 
