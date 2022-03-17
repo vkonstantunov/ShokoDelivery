@@ -1,8 +1,7 @@
 import logging
 from aiogram import Bot, Dispatcher, executor, types
 import botadmin
-import kb
-from db import dbshoko
+from handler import kh_handler,shoko_handler,vabi_handler
 
 
 bot = Bot(token=botadmin.TOKEN)
@@ -16,119 +15,125 @@ logging.basicConfig(level=logging.INFO)
 @dp.message_handler(commands="start")
 async def shoko_start(message: types.Message):
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-    keyboard.add(types.KeyboardButton(text='Меню'),
-                 types.KeyboardButton(text='Помощь'),
-                 types.KeyboardButton(text='Корзина'))
-    us_id = message.from_user.id
-    us_name = message.from_user.first_name
-    dbshoko.db_table_val(user_id=us_id, user_name=us_name)
-    await message.answer('Выберите действие:', reply_markup=keyboard)
+    keyboard.add(types.KeyboardButton(text='☕Шоколадница'),
+                 types.KeyboardButton(text='☕Кофе Хауз'),
+                 types.KeyboardButton(text='🍱ВабиСаби'))
+    await message.answer('Выберите от куда хотите заказать доставку:', reply_markup=keyboard)
     return keyboard
 
 
-@dp.message_handler(text="Главное меню")
-async def shoko_start(message: types.Message):
-    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-    keyboard.add(types.KeyboardButton(text='Меню'),
-                 types.KeyboardButton(text='Помощь'),
-                 types.KeyboardButton(text='Корзина'))
-    await message.answer("Выберите действие:", reply_markup=keyboard)
-    return keyboard
+@dp.message_handler(text="☕Шоколадница")
+async def menu(message: types.Message):
+        keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+        keyboard.add(types.KeyboardButton(text='🍽Меню'),
+                    types.KeyboardButton(text='Корзина'),
+                    types.KeyboardButton(text='💬Помощь'))
+        await message.answer('Выберите действие:', reply_markup=keyboard)
+        return keyboard
 
 
-@dp.message_handler(text="Меню")
-async def shoko_menu(message: types.Message):
-    keyboard = kb.shoko_m()
-    keyboard1 = kb.shoko_s()
-    await message.answer("Выберите действие:", reply_markup=keyboard)
-    await message.answer("Выберите действие:", reply_markup=keyboard1)
+@dp.message_handler(text="☕Кофе Хауз")
+async def menu(message: types.Message):
+        #keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+        #keyboard.add(types.KeyboardButton(text='🍴Меню'),
+                    #types.KeyboardButton(text='Корзина'),
+                    #types.KeyboardButton(text='💬Помощь'))
+        await message.answer('Данное заведение в разработке')
 
 
-@dp.message_handler(text="Корзина")
-async def shoko_basket(message: types.Message):
-    keyboard1 = kb.shoko_s()
-    await message.answer("Выберите действие:", reply_markup=keyboard1)
+
+@dp.message_handler(text="🍱ВабиСаби")
+async def menu(message: types.Message):
+        #keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+        #keyboard.add(types.KeyboardButton(text='🍣Меню'),
+                    #types.KeyboardButton(text='Корзина'),
+                    #types.KeyboardButton(text='💬Помощь'))
+        await message.answer('Данное заведение в разработке')
 
 
-@dp.message_handler(text="Помощь")
-async def shoko_help(message: types.Message):
-    keyboard = kb.shoko_h()
-    await message.answer("Выберите действие:", reply_markup=keyboard)
 
+@dp.message_handler(content_types=["text"])
+async def menu(message: types.Message):
+    if message.text == "🍽Меню":
+        keyboard = shoko_handler.shoko_menu()
+        await message.answer('Выберите действие:', reply_markup=keyboard)
+        return keyboard
+    #elif message.text == "🍴Меню":
+        #keyboard = kh_handler.kh_menu()
+        #await message.answer('Выберите действие:', reply_markup=keyboard)
+        #return keyboard
+    #elif message.text == "🍣Меню":
+        #keyboard = vabi_handler.vabi_menu()
+        #await message.answer('Выберите действие:', reply_markup=keyboard)
+        #return keyboard
+    elif message.text == "💬Помощь":
+        await message.answer("""
+Наши контакты:
+Почта:blabalbal
+Телефон:8-999-99-99
+Наш бот:@blablabal""")
 
-@dp.message_handler(text="Наши контакты")
-async def shoko_help(message: types.Message):
-    await message.answer("""Наша почта: help@shoko.ru
-Наша телефон: 8-999-99-99-99
-Наш бот для обратной связи:@shoko_delevery_bot""")
+@dp.callback_query_handler(text="sandwiches")
+async def shoko_sandwiches(call: types.CallbackQuery):
+    kb = shoko_handler.shoko_sandwiches()
+    await call.message.answer("Какой сэндвич вам по вкусу?", reply_markup=kb)
 
+@dp.callback_query_handler(text="salad")
+async def shoko_salad(call: types.CallbackQuery):
+    kb = shoko_handler.shoko_salad()
+    await call.message.answer("Какой Салат вам по вкусу?", reply_markup=kb)
 
-# Обработка напитков
-@dp.callback_query_handler(text="drinks")
-async def shoko_drinks(call: types.CallbackQuery):
-    keyboard = kb.shoko_dr()
-    await call.message.answer("Какие напитки интересуют?", reply_markup=keyboard)
-    await call.answer()
+@dp.callback_query_handler(text="pan")
+async def shoko_pan(call: types.CallbackQuery):
+    kb = shoko_handler.shoko_pan()
+    await call.message.answer("Какие блинчики вы любите?", reply_markup=kb)
 
-
-# Обработка супов
 @dp.callback_query_handler(text="soup")
 async def shoko_soup(call: types.CallbackQuery):
-    keyboard = kb.shoko_sp()
-    await call.message.answer("Какой суп интересует?", reply_markup=keyboard)
-    await call.answer()
+    kb = shoko_handler.shoko_soup()
+    await call.message.answer("Какой суп вам по вкусу?", reply_markup=kb)
 
 
-# Обработка горячих напитков
-@dp.callback_query_handler(text="hot_drinks")
-async def shoko_drinks_hot(call: types.CallbackQuery):
-    keyboard = kb.shoko_dr_hot()
-    await call.message.answer("Какие напитки интересуют?", reply_markup=keyboard)
-    await call.answer()
+@dp.callback_query_handler(text="pizza")
+async def shoko_pizza(call: types.CallbackQuery):
+    kb = shoko_handler.shoko_pizza()
+    await call.message.answer("Какую пиццу выберете?", reply_markup=kb)
 
 
-# Кофе
-@dp.callback_query_handler(text="coffee")
-async def shoko_drinks_coffee(call: types.CallbackQuery):
-    keyboard = kb.shoko_dr_hot_coffee()
-    await call.message.answer("Какой кофе интресует?", reply_markup=keyboard)
-    await call.answer()
+@dp.callback_query_handler(text="hot_bl")
+async def shoko_hot_bl(call: types.CallbackQuery):
+    kb = shoko_handler.shoko_hot_bl()
+    await call.message.answer("Как дома", reply_markup=kb)
 
 
-# Чай
-@dp.callback_query_handler(text="tea")
-async def shoko_drinks_coffee(call: types.CallbackQuery):
-    keyboard = kb.shoko_dr_hot_tea()
-    await call.message.answer("Какой чай интересует?", reply_markup=keyboard)
-    await call.answer()
+@dp.callback_query_handler(text="post")
+async def shoko_post(call: types.CallbackQuery):
+    kb = shoko_handler.shoko_post()
+    await call.message.answer("Для тех кто держит пост", reply_markup=kb)
 
 
-@dp.callback_query_handler(text="cold_drinks")
-async def shoko_drinks_tea(call: types.CallbackQuery):
-    keyboard = kb.shoko_dr_cold()
-    await call.message.answer("Какие напитки интересуют?", reply_markup=keyboard)
-    await call.answer()
+@dp.callback_query_handler(text="combo")
+async def shoko_combo(call: types.CallbackQuery):
+    kb = shoko_handler.shoko_combo()
+    await call.message.answer("Выгодно", reply_markup=kb)
 
 
-@dp.callback_query_handler(text="juice")
-async def shoko_drinks_juice(call: types.CallbackQuery):
-    keyboard = kb.shoko_dr_cold_juice()
-    await call.message.answer("Какой сок интересует?", reply_markup=keyboard)
-    await call.answer()
+@dp.callback_query_handler(text="break")
+async def shoko_break(call: types.CallbackQuery):
+    kb = shoko_handler.shoko_break()
+    await call.message.answer("Их можно заказать целый день", reply_markup=kb)
 
 
-@dp.callback_query_handler(text="lemonade")
-async def shoko_drinks_lemonade(call: types.CallbackQuery):
-    keyboard = kb.shoko_dr_cold_lemonade()
-    await call.message.answer("Какой лимонад интересует?", reply_markup=keyboard)
-    await call.answer()
+@dp.callback_query_handler(text="desert")
+async def shoko_desert(call: types.CallbackQuery):
+    kb = shoko_handler.shoko_desert()
+    await call.message.answer("Ммм как вкусно", reply_markup=kb)
 
 
-@dp.callback_query_handler(text="smoothie")
-async def shoko_drinks_smoothie(call: types.CallbackQuery):
-    keyboard = kb.shoko_dr_cold_smoothie()
-    await call.message.answer("Какое смузи интересует?", reply_markup=keyboard)
-    await call.answer()
+@dp.callback_query_handler(text="test")
+async def shoko_test(call: types.CallbackQuery):
+    await call.message.answer("Функция корзины корзины в разработке......")
+
 
 
 if __name__ == '__main__':
