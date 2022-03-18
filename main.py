@@ -2,7 +2,7 @@ import logging
 from aiogram import Bot, Dispatcher, executor, types
 import botadmin
 from handler import kh_handler,shoko_handler,vabi_handler
-
+import sqlite3
 
 bot = Bot(token=botadmin.TOKEN)
 # Диспетчер для бота
@@ -11,25 +11,41 @@ dp = Dispatcher(bot)
 logging.basicConfig(level=logging.INFO)
 
 
+
 # Стартовое меню
 @dp.message_handler(commands="start")
 async def shoko_start(message: types.Message):
+    try:
+        conn = sqlite3.connect('shokobot.db')
+        cur = conn.cursor()
+        cur.execute(f'INSERT INTO test VALUES("{message.from_user.id}","{message.from_user.first_name}")')
+        conn.commit()
+    except Exception as e:
+        print(e)
+        conn = sqlite3.connect('shokobot.db')
+        cur = conn.cursor()
+        cur.execute(f'INSERT INTO test VALUES("{message.from_user.id}")')
+        conn.commit()
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     keyboard.add(types.KeyboardButton(text='☕Шоколадница'),
                  types.KeyboardButton(text='☕Кофе Хауз'),
                  types.KeyboardButton(text='🍱ВабиСаби'))
-    await message.answer('Выберите от куда хотите заказать доставку:', reply_markup=keyboard)
+    await message.answer('Выберите от куда хотите заказать доставку:',reply_markup=keyboard)
     return keyboard
+
+
 
 
 @dp.message_handler(text="☕Шоколадница")
 async def menu(message: types.Message):
-        keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-        keyboard.add(types.KeyboardButton(text='🍽Меню'),
-                    types.KeyboardButton(text='Корзина'),
-                    types.KeyboardButton(text='💬Помощь'))
-        await message.answer('Выберите действие:', reply_markup=keyboard)
-        return keyboard
+    photo = open('photo/shokologo.jpg', 'rb')
+    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+    keyboard.add(types.KeyboardButton(text='🍽Меню'),
+                types.KeyboardButton(text='Корзина'),
+                types.KeyboardButton(text='💬Помощь'))
+    await bot.send_photo(chat_id = message.chat.id, photo=photo)
+    await message.answer('Выберите нужный вам раздел:', reply_markup=keyboard)
+    return keyboard
 
 
 @dp.message_handler(text="☕Кофе Хауз")
