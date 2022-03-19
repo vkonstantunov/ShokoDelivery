@@ -1,7 +1,6 @@
 from aiogram import Bot, Dispatcher, executor, types
 
 
-
 def shoko_menu():
     keyboard =types.InlineKeyboardMarkup(resize_keyboard=True, row_width=2)
     keyboard.add(types.InlineKeyboardButton(text="Постное меню",callback_data="post"),
@@ -76,11 +75,9 @@ def shoko_pan():
 
 
 def shoko_soup():
-    button = [types.InlineKeyboardButton(text="Куриный суп с лапшой", callback_data="test"),
-              types.InlineKeyboardButton(text="Крем-Суп с шампиньонами", callback_data="test"),
-              types.InlineKeyboardButton(text="Том ям с креветками и кальмаром", callback_data="test")]
+    button1 = types.InlineKeyboardButton(text="В корзину", callback_data="test")
     keyboard = types.InlineKeyboardMarkup(resize_keyboard=True, row_width=1)
-    keyboard.add(*button)
+    keyboard.add(button1)
     return keyboard
 
 

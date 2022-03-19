@@ -1,4 +1,6 @@
 import logging
+
+import keyboard as keyboard
 from aiogram import Bot, Dispatcher, executor, types
 import botadmin
 from handler import kh_handler,shoko_handler,vabi_handler
@@ -38,33 +40,37 @@ async def shoko_start(message: types.Message):
 
 @dp.message_handler(text="☕Шоколадница")
 async def menu(message: types.Message):
-    photo = open('photo/shokologo.jpg', 'rb')
+    photo = open('photo/logo/shokologo.jpg', 'rb')
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     keyboard.add(types.KeyboardButton(text='🍽Меню'),
                 types.KeyboardButton(text='Корзина'),
                 types.KeyboardButton(text='💬Помощь'))
-    await bot.send_photo(chat_id = message.chat.id, photo=photo)
+    await bot.send_photo(chat_id=message.chat.id, photo=photo)
     await message.answer('Выберите нужный вам раздел:', reply_markup=keyboard)
     return keyboard
 
 
 @dp.message_handler(text="☕Кофе Хауз")
 async def menu(message: types.Message):
-        #keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-        #keyboard.add(types.KeyboardButton(text='🍴Меню'),
-                    #types.KeyboardButton(text='Корзина'),
-                    #types.KeyboardButton(text='💬Помощь'))
-        await message.answer('Данное заведение в разработке')
+    photo = open('photo/logo/khlogo.jpg', 'rb')
+    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+    keyboard.add(types.KeyboardButton(text='🍴Меню'),
+                types.KeyboardButton(text='Корзина'),
+                types.KeyboardButton(text='💬Помощь'))
+    await bot.send_photo(chat_id=message.chat.id, photo=photo)
+    await message.answer('Данное заведение в разработке')
 
 
 
 @dp.message_handler(text="🍱ВабиСаби")
 async def menu(message: types.Message):
-        #keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-        #keyboard.add(types.KeyboardButton(text='🍣Меню'),
-                    #types.KeyboardButton(text='Корзина'),
-                    #types.KeyboardButton(text='💬Помощь'))
-        await message.answer('Данное заведение в разработке')
+    photo = open('photo/logo/vabilogo.jpg', 'rb')
+    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+    keyboard.add(types.KeyboardButton(text='🍣Меню'),
+                types.KeyboardButton(text='Корзина'),
+                types.KeyboardButton(text='💬Помощь'))
+    await bot.send_photo(message.chat.id, photo=photo)
+    await message.answer('Данное заведение в разработке')
 
 
 
@@ -74,14 +80,14 @@ async def menu(message: types.Message):
         keyboard = shoko_handler.shoko_menu()
         await message.answer('Выберите действие:', reply_markup=keyboard)
         return keyboard
-    #elif message.text == "🍴Меню":
-        #keyboard = kh_handler.kh_menu()
-        #await message.answer('Выберите действие:', reply_markup=keyboard)
-        #return keyboard
-    #elif message.text == "🍣Меню":
-        #keyboard = vabi_handler.vabi_menu()
-        #await message.answer('Выберите действие:', reply_markup=keyboard)
-        #return keyboard
+    elif message.text == "🍴Меню":
+        keyboard = kh_handler.kh_menu()
+        await message.answer('Выберите действие:', reply_markup=keyboard)
+        return keyboard
+    elif message.text == "🍣Меню":
+        keyboard = vabi_handler.vabi_menu()
+        await message.answer('Выберите действие:', reply_markup=keyboard)
+        return keyboard
     elif message.text == "💬Помощь":
         await message.answer("""
 Наши контакты:
@@ -106,14 +112,24 @@ async def shoko_pan(call: types.CallbackQuery):
 
 @dp.callback_query_handler(text="soup")
 async def shoko_soup(call: types.CallbackQuery):
+    photo = open('photo/soup/qur.jpg', 'rb')
+    photo1 = open('photo/soup/grib.jpg', 'rb')
+    photo2 = open('photo/soup/tom.jpg', 'rb')
+    photo3 = open('photo/soup/borch.jpg', 'rb')
     kb = shoko_handler.shoko_soup()
-    await call.message.answer("Какой суп вам по вкусу?", reply_markup=kb)
+    await call.message.answer_photo(photo, """
+Куриный суп с лапшой 300гр
+Цена: 300р""", reply_markup=kb)
+    await call.message.answer_photo(photo1, 'Крем-Суп с шампиньонами',reply_markup=kb)
+    await call.message.answer_photo(photo2, 'Том ям с креветками и кальмаром', reply_markup=kb)
+    await call.message.answer_photo(photo3, 'Борщ с говядиной', reply_markup=kb)
 
 
 @dp.callback_query_handler(text="pizza")
 async def shoko_pizza(call: types.CallbackQuery):
     kb = shoko_handler.shoko_pizza()
-    await call.message.answer("Какую пиццу выберете?", reply_markup=kb)
+    await call.message.answer("Какой суп вам по вкусу?", reply_markup=kb)
+
 
 
 @dp.callback_query_handler(text="hot_bl")
@@ -148,7 +164,7 @@ async def shoko_desert(call: types.CallbackQuery):
 
 @dp.callback_query_handler(text="test")
 async def shoko_test(call: types.CallbackQuery):
-    await call.message.answer("Функция корзины корзины в разработке......")
+    await call.message.answer("Функция корзины в разработке......")
 
 
 
