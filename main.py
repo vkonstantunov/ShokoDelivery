@@ -11,7 +11,14 @@ dp = Dispatcher(bot)
 # Включаем логирование, чтобы не пропустить важные сообщения
 logging.basicConfig(level=logging.INFO)
 
-
+def replace(b=0):
+    name = b
+    b = str(b)
+    b = b.replace("(", "")
+    b = b.replace("'", "")
+    b = b.replace(",", "")
+    b = b.replace(")", "")
+    return b
 # Стартовое меню
 @dp.message_handler(commands="start")
 async def shoko_start(message: types.Message):
@@ -30,18 +37,12 @@ async def shoko_start(message: types.Message):
         with connection.cursor() as cursor:
             cursor.execute(f"""SELECT user_name FROM bot_users WHERE user_id = '{message.from_user.id}';""")
             name = cursor.fetchone()
-            print(name)
-            name = str(name)
-            name = name.replace("(", "")
-            name = name.replace("'", "")
-            name = name.replace(",", "")
-            name = name.replace(")", "")
+            name=replace(name)
     except Exception as _ex:
         print(_ex)
     finally:
         if connection:
             connection.close()
-            print("GOOD")
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     keyboard.add(types.KeyboardButton(text='☕Шоколадница'),
                  types.KeyboardButton(text='☕Кофе Хауз'),
