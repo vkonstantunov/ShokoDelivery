@@ -1,12 +1,11 @@
 import logging
-
-import keyboard as keyboard
+import psycopg2
 from aiogram import Bot, Dispatcher, executor, types
-import botadmin
+import config
 from handler import kh_handler,shoko_handler,vabi_handler
-import sqlite3
+from config import *
 
-bot = Bot(token=botadmin.TOKEN)
+bot = Bot(token=config.TOKEN)
 # Диспетчер для бота
 dp = Dispatcher(bot)
 # Включаем логирование, чтобы не пропустить важные сообщения
@@ -18,21 +17,37 @@ logging.basicConfig(level=logging.INFO)
 @dp.message_handler(commands="start")
 async def shoko_start(message: types.Message):
     try:
-        conn = sqlite3.connect('shokobot.db')
-        cur = conn.cursor()
-        cur.execute(f'INSERT INTO test VALUES("{message.from_user.id}","{message.from_user.first_name}")')
-        conn.commit()
-    except Exception as e:
-        print(e)
-        conn = sqlite3.connect('shokobot.db')
-        cur = conn.cursor()
-        cur.execute(f'INSERT INTO test VALUES("{message.from_user.id}")')
-        conn.commit()
+        connection = psycopg2.connect(
+            host=host,
+            user=user,
+            password=password,
+            database=db_name
+        )
+        connection.autocommit = True
+        with connection.cursor() as cursor:
+            cursor.execute(f"""
+             INSERT INTO bot_users (user_id,user_name) VALUES ({message.from_user.id},'{message.from_user.first_name}');"""
+                           )
+        with connection.cursor() as cursor:
+            cursor.execute(f"""SELECT user_name FROM bot_users WHERE user_id = '{message.from_user.id}';""")
+            name = cursor.fetchone()
+            print(name)
+            name1 = str(name)
+            name1 = name1.replace("(", "")
+            name1 = name1.replace("'", "")
+            name1 = name1.replace(",", "")
+            name1 = name1.replace(")", "")
+    except Exception as _ex:
+        print(_ex)
+    finally:
+        if connection:
+            connection.close()
+            print("GOOD")
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     keyboard.add(types.KeyboardButton(text='☕Шоколадница'),
                  types.KeyboardButton(text='☕Кофе Хауз'),
                  types.KeyboardButton(text='🍱ВабиСаби'))
-    await message.answer('Выберите от куда хотите заказать доставку:',reply_markup=keyboard)
+    await message.answer(f'{name1} выберите от куда хотите заказать доставку:',reply_markup=keyboard)
     return keyboard
 
 
