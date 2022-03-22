@@ -12,7 +12,6 @@ dp = Dispatcher(bot)
 logging.basicConfig(level=logging.INFO)
 
 
-
 # Стартовое меню
 @dp.message_handler(commands="start")
 async def shoko_start(message: types.Message):
@@ -32,11 +31,11 @@ async def shoko_start(message: types.Message):
             cursor.execute(f"""SELECT user_name FROM bot_users WHERE user_id = '{message.from_user.id}';""")
             name = cursor.fetchone()
             print(name)
-            name1 = str(name)
-            name1 = name1.replace("(", "")
-            name1 = name1.replace("'", "")
-            name1 = name1.replace(",", "")
-            name1 = name1.replace(")", "")
+            name = str(name)
+            name = name.replace("(", "")
+            name = name.replace("'", "")
+            name = name.replace(",", "")
+            name = name.replace(")", "")
     except Exception as _ex:
         print(_ex)
     finally:
@@ -47,10 +46,8 @@ async def shoko_start(message: types.Message):
     keyboard.add(types.KeyboardButton(text='☕Шоколадница'),
                  types.KeyboardButton(text='☕Кофе Хауз'),
                  types.KeyboardButton(text='🍱ВабиСаби'))
-    await message.answer(f'{name1} выберите от куда хотите заказать доставку:',reply_markup=keyboard)
+    await message.answer(f'{name} выберите от куда хотите заказать доставку:',reply_markup=keyboard)
     return keyboard
-
-
 
 
 @dp.message_handler(text="☕Шоколадница")
@@ -76,7 +73,6 @@ async def menu(message: types.Message):
     await message.answer('Данное заведение в разработке')
 
 
-
 @dp.message_handler(text="🍱ВабиСаби")
 async def menu(message: types.Message):
     photo = open('photo/logo/vabilogo.jpg', 'rb')
@@ -86,7 +82,6 @@ async def menu(message: types.Message):
                 types.KeyboardButton(text='💬Помощь'))
     await bot.send_photo(message.chat.id, photo=photo)
     await message.answer('Данное заведение в разработке')
-
 
 
 @dp.message_handler(content_types=["text"])
@@ -110,20 +105,24 @@ async def menu(message: types.Message):
 Телефон:8-999-99-99
 Наш бот:@blablabal""")
 
+
 @dp.callback_query_handler(text="sandwiches")
 async def shoko_sandwiches(call: types.CallbackQuery):
     kb = shoko_handler.shoko_sandwiches()
     await call.message.answer("Какой сэндвич вам по вкусу?", reply_markup=kb)
+
 
 @dp.callback_query_handler(text="salad")
 async def shoko_salad(call: types.CallbackQuery):
     kb = shoko_handler.shoko_salad()
     await call.message.answer("Какой Салат вам по вкусу?", reply_markup=kb)
 
+
 @dp.callback_query_handler(text="pan")
 async def shoko_pan(call: types.CallbackQuery):
     kb = shoko_handler.shoko_pan()
     await call.message.answer("Какие блинчики вы любите?", reply_markup=kb)
+
 
 @dp.callback_query_handler(text="soup")
 async def shoko_soup(call: types.CallbackQuery):
@@ -144,7 +143,6 @@ async def shoko_soup(call: types.CallbackQuery):
 async def shoko_pizza(call: types.CallbackQuery):
     kb = shoko_handler.shoko_pizza()
     await call.message.answer("Какой суп вам по вкусу?", reply_markup=kb)
-
 
 
 @dp.callback_query_handler(text="hot_bl")
