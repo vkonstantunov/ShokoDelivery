@@ -1,24 +1,30 @@
+import asyncio
 import logging
 import psycopg2
 from aiogram import Bot, Dispatcher, executor, types
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
 import config
-from handler import kh_handler,shoko_handler,vabi_handler
+from handler import kh_handler, shoko_handler, vabi_handler
 from config import *
+from funcc import rename, db
+import buttons
+
 
 bot = Bot(token=config.TOKEN)
 # Диспетчер для бота
-dp = Dispatcher(bot)
+storage = MemoryStorage()
+dp = Dispatcher(bot, storage=storage)
 # Включаем логирование, чтобы не пропустить важные сообщения
 logging.basicConfig(level=logging.INFO)
+# подключение к бд
+conn = psycopg2.connect(host=host,
+            user=user,
+            password=password,
+            database=db_name)
+cursor = conn.cursor()
+conn.autocommit = True
 
-def replace(b=0):
-    name = b
-    b = str(b)
-    b = b.replace("(", "")
-    b = b.replace("'", "")
-    b = b.replace(",", "")
-    b = b.replace(")", "")
-    return b
+
 # Стартовое меню
 @dp.message_handler(commands="start")
 async def shoko_start(message: types.Message):
@@ -37,7 +43,7 @@ async def shoko_start(message: types.Message):
         with connection.cursor() as cursor:
             cursor.execute(f"""SELECT user_name FROM bot_users WHERE user_id = '{message.from_user.id}';""")
             name = cursor.fetchone()
-            name=replace(name)
+            name= rename(name)
     except Exception as _ex:
         print(_ex)
     finally:
@@ -53,134 +59,102 @@ async def shoko_start(message: types.Message):
 
 @dp.message_handler(text="☕Шоколадница")
 async def menu(message: types.Message):
+    id = message.from_user.first_name
+    name = db(id)
     photo = open('photo/logo/shokologo.jpg', 'rb')
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     keyboard.add(types.KeyboardButton(text='🍽Меню'),
                 types.KeyboardButton(text='Корзина'),
                 types.KeyboardButton(text='💬Помощь'))
     await bot.send_photo(chat_id=message.chat.id, photo=photo)
-    await message.answer('Выберите нужный вам раздел:', reply_markup=keyboard)
+    await message.answer(f'{name} Выберите нужный вам раздел:', reply_markup=keyboard)
     return keyboard
 
 
 @dp.message_handler(text="☕Кофе Хауз")
 async def menu(message: types.Message):
+    id = message.from_user.first_name
+    name = db(id)
     photo = open('photo/logo/khlogo.jpg', 'rb')
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     keyboard.add(types.KeyboardButton(text='🍴Меню'),
                 types.KeyboardButton(text='Корзина'),
                 types.KeyboardButton(text='💬Помощь'))
     await bot.send_photo(chat_id=message.chat.id, photo=photo)
-    await message.answer('Данное заведение в разработке')
+    await message.answer(f'{name} Выберите нужный вам раздел:', reply_markup=keyboard)
 
 
 @dp.message_handler(text="🍱ВабиСаби")
 async def menu(message: types.Message):
+    id = message.from_user.first_name
+    name = db(id)
     photo = open('photo/logo/vabilogo.jpg', 'rb')
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     keyboard.add(types.KeyboardButton(text='🍣Меню'),
                 types.KeyboardButton(text='Корзина'),
                 types.KeyboardButton(text='💬Помощь'))
     await bot.send_photo(message.chat.id, photo=photo)
-    await message.answer('Данное заведение в разработке')
+    await message.answer(f'{name} Выберите нужный вам раздел:', reply_markup=keyboard)
 
 
 @dp.message_handler(content_types=["text"])
 async def menu(message: types.Message):
+    id = message.from_user.first_name
+    name = db(id)
     if message.text == "🍽Меню":
-        keyboard = shoko_handler.shoko_menu()
-        await message.answer('Выберите действие:', reply_markup=keyboard)
-        return keyboard
+        cursor.execute('''SELECT * FROM menu_shoko''')
+        data = cursor.fetchall()
+        await message.answer(f'{name} Выберите нужный раздел меню:', reply_markup=buttons.genmarkup(data))
     elif message.text == "🍴Меню":
-        keyboard = kh_handler.kh_menu()
-        await message.answer('Выберите действие:', reply_markup=keyboard)
-        return keyboard
+        cursor.execute('''SELECT * FROM menu_kh''')
+        data = cursor.fetchall()
+        await message.answer(f'{name} Выберите нужный раздел меню:', reply_markup=buttons.genmarkup(data))
     elif message.text == "🍣Меню":
-        keyboard = vabi_handler.vabi_menu()
-        await message.answer('Выберите действие:', reply_markup=keyboard)
-        return keyboard
+        cursor.execute('''SELECT * FROM menu_vabi''')
+        data = cursor.fetchall()
+        await message.answer(f'{name} Выберите нужный раздел меню:', reply_markup=buttons.genmarkup(data))
     elif message.text == "💬Помощь":
-        await message.answer("""
-Наши контакты:
+        await message.answer(f"""
+{name} Наши контакты:
 Почта:blabalbal
 Телефон:8-999-99-99
 Наш бот:@blablabal""")
 
+def image(a,b):
+    photo = open(a,b)
+    return photo
 
-@dp.callback_query_handler(text="sandwiches")
-async def shoko_sandwiches(call: types.CallbackQuery):
-    kb = shoko_handler.shoko_sandwiches()
-    await call.message.answer("Какой сэндвич вам по вкусу?", reply_markup=kb)
-
-
-@dp.callback_query_handler(text="salad")
-async def shoko_salad(call: types.CallbackQuery):
-    kb = shoko_handler.shoko_salad()
-    await call.message.answer("Какой Салат вам по вкусу?", reply_markup=kb)
-
-
-@dp.callback_query_handler(text="pan")
-async def shoko_pan(call: types.CallbackQuery):
-    kb = shoko_handler.shoko_pan()
-    await call.message.answer("Какие блинчики вы любите?", reply_markup=kb)
-
-
-@dp.callback_query_handler(text="soup")
+@dp.callback_query_handler(text="shoko_soup")
 async def shoko_soup(call: types.CallbackQuery):
-    photo = open('photo/soup/qur.jpg', 'rb')
-    photo1 = open('photo/soup/grib.jpg', 'rb')
-    photo2 = open('photo/soup/tom.jpg', 'rb')
-    photo3 = open('photo/soup/borch.jpg', 'rb')
-    kb = shoko_handler.shoko_soup()
-    await call.message.answer_photo(photo, """
-Куриный суп с лапшой 300гр
-Цена: 300р""", reply_markup=kb)
-    await call.message.answer_photo(photo1, 'Крем-Суп с шампиньонами',reply_markup=kb)
-    await call.message.answer_photo(photo2, 'Том ям с креветками и кальмаром', reply_markup=kb)
-    await call.message.answer_photo(photo3, 'Борщ с говядиной', reply_markup=kb)
-
-
-@dp.callback_query_handler(text="pizza")
-async def shoko_pizza(call: types.CallbackQuery):
-    kb = shoko_handler.shoko_pizza()
-    await call.message.answer("Какой суп вам по вкусу?", reply_markup=kb)
-
-
-@dp.callback_query_handler(text="hot_bl")
-async def shoko_hot_bl(call: types.CallbackQuery):
-    kb = shoko_handler.shoko_hot_bl()
-    await call.message.answer("Как дома", reply_markup=kb)
-
-
-@dp.callback_query_handler(text="post")
-async def shoko_post(call: types.CallbackQuery):
-    kb = shoko_handler.shoko_post()
-    await call.message.answer("Для тех кто держит пост", reply_markup=kb)
-
-
-@dp.callback_query_handler(text="combo")
-async def shoko_combo(call: types.CallbackQuery):
-    kb = shoko_handler.shoko_combo()
-    await call.message.answer("Выгодно", reply_markup=kb)
-
-
-@dp.callback_query_handler(text="break")
-async def shoko_break(call: types.CallbackQuery):
-    kb = shoko_handler.shoko_break()
-    await call.message.answer("Их можно заказать целый день", reply_markup=kb)
-
-
-@dp.callback_query_handler(text="desert")
-async def shoko_desert(call: types.CallbackQuery):
-    kb = shoko_handler.shoko_desert()
-    await call.message.answer("Ммм как вкусно", reply_markup=kb)
-
-
-@dp.callback_query_handler(text="test")
-async def shoko_test(call: types.CallbackQuery):
-    await call.message.answer("Функция корзины в разработке......")
-
-
+    await call.message.answer('Какой суп выберете:')
+    cursor.execute('''SELECT name FROM shoko_soup''')
+    name = cursor.fetchall()
+    tom = name[0]
+    tom = rename(tom)
+    borch  = name[1]
+    borch = rename(borch)
+    cream = name[2]
+    cream = rename(cream)
+    cur = name[3]
+    cur = rename(cur)
+    cur1 = name[4]
+    cur1 = rename(cur1)
+    cursor.execute('''SELECT price FROM shoko_soup''')
+    price = cursor.fetchall()
+    #cursor.execute('''SELECT * FROM shoko_soup''')
+    data = "Добавить в корзину"
+    photo_tom = image("photo/soup/tom.jpg", 'rb')
+    photo_borch = open("photo/soup/borch.jpg", 'rb')
+    photo_cream = open("photo/soup/grib.jpg", 'rb')
+    photo_cur = open("photo/soup/qur2.jpg", 'rb')
+    photo_cur1 = open("photo/soup/qur.jpg", 'rb')
+    kb = shoko_handler.shoko_basket()
+    await call.message.answer_photo(photo_tom, f'{tom}', reply_markup=kb)
+    await call.message.answer_photo(photo_borch, f'{borch}', reply_markup=kb)
+    await call.message.answer_photo(photo_cream, f'{cream}', reply_markup=kb)
+    await call.message.answer_photo(photo_cur, f'{cur}', reply_markup=kb)
+    await call.message.answer_photo(photo_cur1, f'{cur1}', reply_markup=kb)
+    await call.answer('Какой суп выберете:')
 
 if __name__ == '__main__':
-    executor.start_polling(dp)
+    executor.start_polling(dp, skip_updates=True)
